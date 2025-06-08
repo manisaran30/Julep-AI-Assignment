@@ -1,0 +1,30 @@
+name: City Cool Facts
+description: For each city, search Wikipedia and generate a "Did-you-know?" travel blurb.
+tools:
+  - name: brave_search
+    type: integration
+    integration:
+      provider: brave
+
+main:
+  - over: $ _.cities
+    map:
+      tool: brave_search
+      arguments:
+        query: $ f"Tourist facts about {_.strip()}"
+  - over: $ steps[0].output
+    map:
+      prompt:
+        - role: system
+          content: |-
+            $ f"""You're a creative travel writer. Based on the content below, create a short, fun 'Did-you-know?' paragraph with 3 cool, surprising facts that would amaze tourists.
+
+            Text:
+            {_.result}
+
+            Keep it concise, engaging, and friendly."""
+        - role: user
+          content: Please share cool facts for my travel blog!
+      unwrap: true
+  - evaluate:
+      blurbs: $ "\n\n".join(steps[1].output)
